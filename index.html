@@ -6,73 +6,290 @@
   <title>Music Theory Toolkit — Flats + Glow</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"/>
   <style>
-    :root{
-      --bg-1:#1e1e2f; --bg-2:#2e2e3f; --glass:rgba(255,255,255,0.05);
-      --accent:#6a5acd; --muted:rgba(255,255,255,0.12);
-      --card-radius:14px;
-      --panel-height:480px; /* unified height so tabs don't jump */
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; min-height:100vh; font-family:Roboto,system-ui,-apple-system,Segoe UI,Arial;
-      background:linear-gradient(135deg,var(--bg-1),var(--bg-2)); color:#fff;
-      display:flex; align-items:center; justify-content:center; padding:28px;
-      font-size:clamp(14px,2vw,16px);
-    }
+  :root{
+    --bg-1:#1e1e2f;
+    --bg-2:#2e2e3f;
+    --glass:rgba(255,255,255,0.05);
+    --accent:#6a5acd;
+    --muted:rgba(255,255,255,0.12);
+    --card-radius:14px;
+    --panel-height:480px;
+  }
 
-    .app{width:100%; max-width:980px}
-    header{text-align:center;margin-bottom:18px}
-    h1{margin:6px 0 6px;font-weight:700;font-size:1.6rem}
-    .tabs{display:inline-flex; gap:6px; background:var(--glass); padding:8px; border-radius:999px}
-    .tab{border:0;background:transparent;color:#ddd;padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:500}
-    .tab.active{background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02)); color:#fff; box-shadow:0 8px 22px rgba(0,0,0,0.45)}
-    .main{background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01)); border-radius:var(--card-radius); padding:18px; box-shadow:0 12px 40px rgba(0,0,0,0.55); backdrop-filter:blur(10px)}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 
-    .panel-wrap{position:relative; height:var(--panel-height); overflow:hidden}
-    /* Panels are stacked and perfectly overlap; fade by opacity/visibility */
-    .panel{position:absolute; inset:0; padding:12px 8px; display:grid; grid-template-columns:1fr 320px; gap:16px;
-           opacity:0; visibility:hidden; transition:opacity .36s ease, visibility .36s; }
-    .panel.active{opacity:1; visibility:visible}
-    @media (max-width:880px){ .panel{grid-template-columns:1fr; } .right-pane{order:-1} }
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:Roboto,system-ui,-apple-system,Segoe UI,Arial;
+    background:linear-gradient(135deg,var(--bg-1),var(--bg-2));
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+    font-size:clamp(14px,2vw,16px);
+    overflow-x:hidden;
+  }
 
-    .controls{background:rgba(255,255,255,0.02); padding:14px; border-radius:12px; display:flex; flex-direction:column; gap:10px}
-    label{font-weight:600; color:#e8e8ff; margin-bottom:6px; display:block}
-    .button-group{display:flex; flex-wrap:wrap; gap:8px}
-    .button-group button{background:rgba(255,255,255,0.06);border:0;padding:8px 10px;border-radius:8px;color:#fff;cursor:pointer;font-weight:500}
-    .button-group button.active{background:var(--accent); font-weight:700}
-    input[type="text"]{width:100%; background:rgba(255,255,255,0.04); border:0; padding:10px; border-radius:8px; color:#fff; font-weight:600}
+  .app{
+    width:100%;
+    max-width:980px;
+  }
 
-    .right-pane{background:rgba(0,0,0,0.18); padding:14px; border-radius:12px; display:flex; flex-direction:column; gap:12px; align-items:center}
-    .output-row{display:flex; gap:8px; width:100%; align-items:center}
-    .copy-btn{background:var(--muted); border:0; padding:8px 10px; border-radius:8px; cursor:pointer}
+  header{
+    text-align:center;
+    margin-bottom:18px;
+  }
 
-    /* keyboard: flats-only labels, multi-color glow, strong visual */
-    .keyboard { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; width:100%; }
-    .key {
-      --glow: rgba(106,90,205,0.55);
-      padding:10px 12px;
-      border-radius:8px;
-      background:#2f2f37;
-      min-width:52px;
-      text-align:center;
-      font-weight:800;
-      color:#fff;
-      transform-origin:center;
-      transition: background-color .45s cubic-bezier(.2,.9,.2,1), box-shadow .55s ease, transform .22s ease, opacity .45s ease;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-      opacity:0.98;
-    }
-    .key.on {
-      background: linear-gradient(135deg, rgba(255,255,255,0.06), var(--glow));
-      box-shadow: 0 6px 22px rgba(0,0,0,0.45), 0 0 40px var(--glow), 0 0 120px color-mix(in srgb, var(--glow) 50%, transparent), 0 0 200px color-mix(in srgb, var(--glow) 20%, transparent);
-      transform: translateY(-6px) scale(1.03);
+  h1{
+    margin:6px 0 6px;
+    font-weight:700;
+    font-size:1.6rem;
+  }
+
+  .tabs{
+    display:inline-flex;
+    flex-wrap:wrap;
+    gap:6px;
+    background:var(--glass);
+    padding:8px;
+    border-radius:999px;
+    justify-content:center;
+  }
+
+  .tab{
+    border:0;
+    background:transparent;
+    color:#ddd;
+    padding:8px 14px;
+    border-radius:999px;
+    cursor:pointer;
+    font-weight:500;
+    transition:background 0.25s, box-shadow 0.3s;
+  }
+
+  .tab.active{
+    background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
+    color:#fff;
+    box-shadow:0 8px 22px rgba(0,0,0,0.45);
+  }
+
+  .main{
+    background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));
+    border-radius:var(--card-radius);
+    padding:18px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.55);
+    backdrop-filter:blur(10px);
+  }
+
+  .panel-wrap{
+    position:relative;
+    height:var(--panel-height);
+    overflow:hidden;
+  }
+
+  .panel{
+    position:absolute;
+    inset:0;
+    padding:12px 8px;
+    display:grid;
+    grid-template-columns:1fr 320px;
+    gap:16px;
+    opacity:0;
+    visibility:hidden;
+    transition:opacity .36s ease, visibility .36s;
+  }
+
+  .panel.active{
+    opacity:1;
+    visibility:visible;
+  }
+
+  @media (max-width:880px){
+    .panel{
+      grid-template-columns:1fr;
+      height:auto;
+      position:relative;
       opacity:1;
+      visibility:visible;
+    }
+    .panel-wrap{
+      height:auto;
+    }
+    .right-pane{
+      order:-1;
+    }
+  }
+
+  .controls{
+    background:rgba(255,255,255,0.02);
+    padding:14px;
+    border-radius:12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  label{
+    font-weight:600;
+    color:#e8e8ff;
+    margin-bottom:6px;
+    display:block;
+  }
+
+  .button-group{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  .button-group button{
+    background:rgba(255,255,255,0.06);
+    border:0;
+    padding:8px 10px;
+    border-radius:8px;
+    color:#fff;
+    cursor:pointer;
+    font-weight:500;
+    transition:background 0.25s, transform 0.2s;
+  }
+
+  .button-group button:hover{
+    transform:scale(1.05);
+  }
+
+  .button-group button.active{
+    background:var(--accent);
+    font-weight:700;
+  }
+
+  input[type="text"], select, textarea{
+    width:100%;
+    background:rgba(255,255,255,0.04);
+    border:0;
+    padding:10px;
+    border-radius:8px;
+    color:#fff;
+    font-weight:600;
+    font-size:1rem;
+  }
+
+  input[type="text"]:focus, select:focus, textarea:focus{
+    outline:none;
+    background:rgba(255,255,255,0.07);
+  }
+
+  .right-pane{
+    background:rgba(0,0,0,0.18);
+    padding:14px;
+    border-radius:12px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    align-items:center;
+  }
+
+  .output-row{
+    display:flex;
+    gap:8px;
+    width:100%;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+
+  .copy-btn{
+    background:var(--muted);
+    border:0;
+    padding:8px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    transition:background 0.25s, transform 0.2s;
+  }
+
+  .copy-btn:hover{
+    background:var(--accent);
+    transform:scale(1.05);
+  }
+
+  .keyboard{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    justify-content:center;
+    width:100%;
+  }
+
+  .key{
+    --glow: rgba(106,90,205,0.55);
+    padding:10px 12px;
+    border-radius:8px;
+    background:#2f2f37;
+    min-width:52px;
+    text-align:center;
+    font-weight:800;
+    color:#fff;
+    transform-origin:center;
+    transition:background-color .45s cubic-bezier(.2,.9,.2,1),
+               box-shadow .55s ease, transform .22s ease, opacity .45s ease;
+    box-shadow:0 2px 6px rgba(0,0,0,0.5);
+    opacity:0.98;
+  }
+
+  .key.on{
+    background:linear-gradient(135deg,rgba(255,255,255,0.06),var(--glow));
+    box-shadow:0 6px 22px rgba(0,0,0,0.45),
+               0 0 40px var(--glow),
+               0 0 120px color-mix(in srgb,var(--glow) 50%,transparent),
+               0 0 200px color-mix(in srgb,var(--glow) 20%,transparent);
+    transform:translateY(-6px) scale(1.03);
+    opacity:1;
+  }
+
+  .muted{
+    color:#cfcfe6;
+    font-size:0.92rem;
+  }
+
+  footer{
+    margin-top:12px;
+    color:#cfcfe6;
+    font-size:0.9rem;
+    text-align:center;
+  }
+
+  /* Small-screen adjustments */
+  @media (max-width:600px){
+    body{
+      padding:16px;
+      font-size:15px;
     }
 
-    /* softer small text */
-    .muted{color:#cfcfe6;font-size:0.92rem}
-    footer{margin-top:12px;color:#cfcfe6;font-size:0.9rem;text-align:center}
-  </style>
+    .main{
+      padding:14px;
+      border-radius:10px;
+    }
+
+    .tab{
+      padding:7px 10px;
+      font-size:0.95rem;
+    }
+
+    .button-group button,
+    .copy-btn{
+      padding:10px 12px;
+      font-size:0.95rem;
+    }
+
+    .keyboard .key{
+      min-width:46px;
+      padding:8px 10px;
+      font-size:0.95rem;
+    }
+  }
+</style>
+
 </head>
 <body>
   <div class="app">
