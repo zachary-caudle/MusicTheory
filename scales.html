@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scale Explorer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2e2e3f);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      font-size: clamp(14px, 2vw, 18px);
+    }
+
+    h1 {
+      margin: 40px 20px 20px;
+      font-weight: 700;
+      font-size: 2rem;
+      text-align: center;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      margin-bottom: 40px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .button-group button {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .button-group button:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .button-group button.active {
+      background-color: #6a5acd;
+      font-weight: 600;
+    }
+
+    .output {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .output input {
+      width: 80%;
+      background-color: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-weight: 500;
+      text-align: center;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      margin-top: 5px;
+    }
+
+    #piano {
+      margin-top: 20px;
+      display: flex;
+      gap: 2px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    #piano div {
+      padding: 10px;
+      border-radius: 4px;
+      background: #444;
+      color: #fff;
+      text-align: center;
+      flex: 1 0 20%;
+    }
+
+    @media (max-width: 500px) {
+      .container {
+        padding: 20px;
+        margin: 20px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin-top: 20px;
+      }
+
+      .output input {
+        width: 100%;
+      }
+
+      #piano div {
+        flex: 1 0 30%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Scale Explorer</h1>
+
+<div class="container">
+  <label>Root Note:</label>
+  <div class="button-group" id="noteGroup">
+    <button>C</button><button>C#</button><button>D</button><button>D#</button>
+    <button>E</button><button>F</button><button>F#</button><button>G</button>
+    <button>G#</button><button>A</button><button>A#</button><button>B</button>
+  </div>
+
+  <label>Scale Type:</label>
+  <div class="button-group" id="scaleGroup">
+    <button data-intervals="2,2,1,2,2,2,1">Major</button>
+    <button data-intervals="2,1,2,2,1,2,2">Natural Minor</button>
+    <button data-intervals="2,1,2,2,2,1,2">Harmonic Minor</button>
+    <button data-intervals="2,1,2,1,2,1,2">Dorian</button>
+    <button data-intervals="1,2,2,1,2,2,2">Phrygian</button>
+    <button data-intervals="2,2,2,1,2,2,1">Lydian</button>
+    <button data-intervals="2,2,1,2,2,1,2">Mixolydian</button>
+  </div>
+
+  <label>Custom Intervals (comma-separated):</label>
+  <input type="text" id="customIntervals" placeholder="e.g. 2,2,1,2,2,2,1">
+
+  <div class="output">
+    <label>Scale Notes:</label>
+    <input type="text" id="scaleOutput" readonly>
+    <button onclick="copyScale()" style="margin-top: 10px;">Copy to Clipboard</button>
+  </div>
+
+  <div id="piano"></div>
+</div>
+
+<script>
+  const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+  let selectedNote = 'C';
+  let selectedIntervals = [2,2,1,2,2,2,1];
+
+  function setupGroup(id, callback) {
+    const group = document.getElementById(id);
+    group.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        group.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        callback(btn);
+        generateScale(); // Auto-generate on selection
+      });
+    });
+  }
+
+  setupGroup('noteGroup', btn => selectedNote = btn.textContent);
+  setupGroup('scaleGroup', btn => {
+    selectedIntervals = btn.dataset.intervals.split(',').map(Number);
+  });
+
+  document.querySelector('#noteGroup button:first-child').classList.add('active');
+  document.querySelector('#scaleGroup button:first-child').classList.add('active');
+
+  document.getElementById('customIntervals').addEventListener('input', () => {
+    generateScale(); // Auto-generate on input change
+  });
+
+  function generateScale() {
+    const rootIndex = notes.indexOf(selectedNote);
+    let scale = [notes[rootIndex]];
+    let currentIndex = rootIndex;
+
+    const customInput = document.getElementById('customIntervals').value.trim();
+    const intervals = customInput ? customInput.split(',').map(Number) : selectedIntervals;
+
+    intervals.forEach(interval => {
+      currentIndex = (currentIndex + interval) % 12;
+      scale.push(notes[currentIndex]);
+    });
+
+    document.getElementById('scaleOutput').value = scale.join(' - ');
+    renderPiano(scale);
+  }
+
+  function copyScale() {
+    const output = document.getElementById('scaleOutput');
+    navigator.clipboard.writeText(output.value).then(() => {
+      alert("Scale copied to clipboard!");
+    });
+  }
+
+  function renderPiano(scale) {
+    const piano = document.getElementById('piano');
+    piano.innerHTML = '';
+    notes.forEach(note => {
+      const key = document.createElement('div');
+      key.textContent = note;
+      key.style.background = scale.includes(note) ? '#6a5acd' : '#444';
+      piano.appendChild(key);
+    });
+  }
+
+  // Initial render
+  generateScale();
+</script>
+
+</body>
+</html>

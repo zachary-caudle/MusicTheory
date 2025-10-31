@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chord Explorer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2e2e3f);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      font-size: clamp(14px, 2vw, 18px);
+    }
+
+    h1 {
+      margin: 20px 20px 10px;
+      font-weight: 700;
+      font-size: 1.8rem;
+      text-align: center;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 20px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .button-group button {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .button-group button:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .button-group button.active {
+      background-color: #6a5acd;
+      font-weight: 600;
+    }
+
+    .output {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .output input {
+      width: 80%;
+      background-color: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-weight: 500;
+      text-align: center;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      margin-top: 5px;
+    }
+
+    #piano {
+      margin-top: 20px;
+      display: flex;
+      gap: 2px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    #piano div {
+      padding: 10px;
+      border-radius: 4px;
+      background: #444;
+      color: #fff;
+      text-align: center;
+      flex: 1 0 20%;
+    }
+
+    @media (max-width: 500px) {
+      .container {
+        padding: 20px;
+        margin: 20px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin-top: 20px;
+      }
+
+      .output input {
+        width: 100%;
+      }
+
+      #piano div {
+        flex: 1 0 30%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Chord Explorer</h1>
+
+<div class="container">
+  <label>Root Note:</label>
+  <div class="button-group" id="noteGroup">
+    <button>C</button><button>C#</button><button>D</button><button>D#</button>
+    <button>E</button><button>F</button><button>F#</button><button>G</button>
+    <button>G#</button><button>A</button><button>A#</button><button>B</button>
+  </div>
+
+  <label>Chord Type:</label>
+  <div class="button-group" id="chordGroup">
+    <button data-symbol="maj" data-intervals="4,3">Major</button>
+    <button data-symbol="m" data-intervals="3,4">Minor</button>
+    <button data-symbol="maj7" data-intervals="4,3,3">Major 7</button>
+    <button data-symbol="m7" data-intervals="3,4,3">Minor 7</button>
+    <button data-symbol="aug" data-intervals="4,4">Augmented</button>
+    <button data-symbol="dim" data-intervals="3,3">Diminished</button>
+    <button data-symbol="7" data-intervals="4,3,4">Dominant 7</button>
+  </div>
+
+  <label>Or type a chord symbol:</label>
+  <input type="text" id="chordInput" placeholder="e.g. Cmaj7, Am, G7">
+
+  <div class="output">
+    <label>Chord Symbol:</label>
+    <input type="text" id="symbolOutput" readonly>
+  </div>
+  <div class="output">
+    <label>Chord Notes:</label>
+    <input type="text" id="chordOutput" readonly>
+  </div>
+  <div class="output">
+    <button onclick="copyChord()">Copy to Clipboard</button>
+  </div>
+
+  <div id="piano"></div>
+</div>
+
+<script>
+  const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const chordMap = {
+    'maj': [4,3],
+    'm': [3,4],
+    'maj7': [4,3,3],
+    'm7': [3,4,3],
+    'aug': [4,4],
+    'dim': [3,3],
+    '7': [4,3,4]
+  };
+
+  let selectedNote = 'C';
+  let selectedIntervals = [4,3];
+  let selectedSymbol = 'maj';
+
+  function setupGroup(id, callback) {
+    const group = document.getElementById(id);
+    group.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        group.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        callback(btn);
+        generateChord();
+      });
+    });
+  }
+
+  setupGroup('noteGroup', btn => selectedNote = btn.textContent);
+  setupGroup('chordGroup', btn => {
+    selectedIntervals = btn.dataset.intervals.split(',').map(Number);
+    selectedSymbol = btn.dataset.symbol;
+  });
+
+  document.querySelector('#noteGroup button:first-child').classList.add('active');
+  document.querySelector('#chordGroup button:first-child').classList.add('active');
+
+  document.getElementById('chordInput').addEventListener('input', () => {
+    const input = document.getElementById('chordInput').value.trim();
+    parseChordSymbol(input);
+  });
+
+  function parseChordSymbol(symbol) {
+    const match = symbol.match(/^([A-G]#?)(.*)$/);
+    if (!match) return;
+
+    const root = match[1];
+    const type = match[2] || 'maj';
+
+    if (!notes.includes(root) || !chordMap[type]) return;
+
+    selectedNote = root;
+    selectedIntervals = chordMap[type];
+    selectedSymbol = type;
+
+    generateChord();
+  }
+
+  function generateChord() {
+    const rootIndex = notes.indexOf(selectedNote);
+    let chord = [notes[rootIndex]];
+    let currentIndex = rootIndex;
+
+    selectedIntervals.forEach(interval => {
+      currentIndex = (currentIndex + interval) % 12;
+      chord.push(notes[currentIndex]);
+    });
+
+    document.getElementById('symbolOutput').value = selectedNote + selectedSymbol;
+    document.getElementById('chordOutput').value = chord.join(' - ');
+    renderPiano(chord);
+  }
+
+  function copyChord() {
+    const output = document.getElementById('chordOutput');
+    navigator.clipboard.writeText(output.value).then(() => {
+      alert("Chord copied to clipboard!");
+    });
+  }
+
+  function renderPiano(chord) {
+    const piano = document.getElementById('piano');
+    piano.innerHTML = '';
+    notes.forEach(note => {
+      const key = document.createElement('div');
+      key.textContent = note;
+      key.style.background = chord.includes(note) ? '#6a5acd' : '#444';
+      piano.appendChild(key);
+    });
+  }
+
+  generateChord();
+</script>
+
+</body>
+</html>

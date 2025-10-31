@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Advanced Instrument Transposer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2e2e3f);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      font-size: clamp(14px, 2vw, 18px);
+    }
+
+    h1 {
+      margin: 40px 20px 20px;
+      font-weight: 700;
+      font-size: 2rem;
+      text-align: center;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      margin-bottom: 40px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .button-group button {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .button-group button:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .button-group button.active {
+      background-color: #6a5acd;
+      font-weight: 600;
+    }
+
+    .output {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .output input {
+      width: 80%;
+      background-color: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-weight: 500;
+      text-align: center;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      margin-top: 5px;
+    }
+
+    @media (max-width: 500px) {
+      .container {
+        padding: 20px;
+        margin: 20px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin-top: 20px;
+      }
+
+      .output input {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Advanced Instrument Transposer</h1>
+
+<div class="container">
+  <label>Input Note:</label>
+  <div class="button-group" id="noteGroup">
+    <button>C</button><button>C#</button><button>D</button><button>D#</button>
+    <button>E</button><button>F</button><button>F#</button><button>G</button>
+    <button>G#</button><button>A</button><button>A#</button><button>B</button>
+  </div>
+
+  <label>From Instrument:</label>
+  <div class="button-group" id="fromGroup">
+    <button data-val="C">C</button><button data-val="Bb">Bb</button><button data-val="Eb">Eb</button>
+    <button data-val="F">F</button><button data-val="Db">Db</button><button data-val="G">G</button><button data-val="A">A</button>
+  </div>
+
+  <label>To Instrument:</label>
+  <div class="button-group" id="toGroup">
+    <button data-val="C">C</button><button data-val="Bb">Bb</button><button data-val="Eb">Eb</button>
+    <button data-val="F">F</button><button data-val="Db">Db</button><button data-val="G">G</button><button data-val="A">A</button>
+  </div>
+
+  <div class="output">
+    <label>Transposed Note:</label>
+    <input type="text" id="outputNote" readonly>
+  </div>
+  <div class="output">
+    <label>Semitone Difference:</label>
+    <input type="text" id="semitoneDiff" readonly>
+  </div>
+</div>
+
+<script>
+  const notesSharp = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const notesFlat  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+  const transpositionMap = {
+    'C': 0,
+    'Bb': 2,
+    'Eb': -3,
+    'F': 7,
+    'Db': 1,
+    'G': -5,
+    'A': -9
+  };
+
+  let selectedNote = 'C';
+  let fromInstrument = 'C';
+  let toInstrument = 'C';
+
+  function setupGroup(id, callback) {
+    const group = document.getElementById(id);
+    group.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        group.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        callback(btn);
+        transpose(); // Auto-transpose on selection
+      });
+    });
+  }
+
+  setupGroup('noteGroup', btn => selectedNote = btn.textContent);
+  setupGroup('fromGroup', btn => fromInstrument = btn.dataset.val);
+  setupGroup('toGroup', btn => toInstrument = btn.dataset.val);
+
+  function getEnharmonic(noteIndex) {
+    return notesFlat[noteIndex % 12];
+  }
+
+  function transpose() {
+    const noteIndex = notesSharp.indexOf(selectedNote.split('/')[0]);
+    const interval = transpositionMap[toInstrument] - transpositionMap[fromInstrument];
+    const transposedIndex = (noteIndex + interval + 12) % 12;
+
+    document.getElementById('outputNote').value = getEnharmonic(transposedIndex);
+    document.getElementById('semitoneDiff').value = interval;
+  }
+
+  // Initial render
+  transpose();
+</script>
+
+</body>
+</html>
