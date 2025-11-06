@@ -375,13 +375,17 @@
             <div>
               <label>Chord Type</label>
               <div id="chordTypeGroup" class="button-group">
-                <button data-symbol="maj" data-intervals="4,3">Major</button>
-                <button data-symbol="m" data-intervals="3,4">Minor</button>
-                <button data-symbol="maj7" data-intervals="4,3,3">Maj7</button>
+                <button data-symbol="maj" data-intervals="4,3">maj</button>
+                <button data-symbol="m" data-intervals="3,4">m</button>
+                <button data-symbol="maj7" data-intervals="4,3,3">maj7</button>
                 <button data-symbol="m7" data-intervals="3,4,3">m7</button>
+                <button data-symbol="6" data-intervals="4,3,3">6</button>
                 <button data-symbol="7" data-intervals="4,3,4">7</button>
-                <button data-symbol="aug" data-intervals="4,4">Aug</button>
-                <button data-symbol="dim" data-intervals="3,3">Dim</button>
+                <button data-symbol="aug" data-intervals="4,4">aug</button>
+                <button data-symbol="dim" data-intervals="3,3">dim</button>
+                <button data-symbol="sus2" data-intervals="2,5">sus2</button>
+                <button data-symbol="sus4" data-intervals="5,2">sus4</button>
+                <button data-symbol="7sus4" data-intervals="5,2,3">7sus4</button>
               </div>
             </div>
 
@@ -616,7 +620,7 @@ function initScale() {
 
     // ---------- CHORD ----------
     function initChord(){
-      const chordMap = { 'maj':[4,3],'m':[3,4],'maj7':[4,3,3],'m7':[3,4,3],'7':[4,3,4],'aug':[4,4],'dim':[3,3] };
+      const chordMap = { 'maj':[4,3],'m':[3,4],'maj7':[4,3,3],'m7':[3,4,3],'6':[4,3,3],'7':[4,3,4],'aug':[4,4],'dim':[3,3], 'sus2':[2,5], 'sus4':[5,2], '7sus4':[5,2,3] };
       let root = 'C', intervals = chordMap['maj'], sym = 'maj';
 
       setupToggleGroup('chordNoteGroup', btn => { root = btn.textContent.trim(); generate(); });
