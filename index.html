@@ -1,0 +1,990 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Music Theory Toolkit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend+Giga:wght@100..900&display=swap" rel="stylesheet"/>
+  <style>
+  :root{
+    --bg-1:#1e1e2f;
+    --bg-2:#2e2e3f;
+    --glass:rgba(255,255,255,0.05);
+    --accent:#6a5acd;
+    --muted:rgba(255,255,255,0.12);
+    --card-radius:14px;
+    --panel-height:480px;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family: "Lexend Giga", sans-serif;
+    background:#2e2e3f;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+    font-size:clamp(14px,2vw,16px);
+    overflow-x:hidden;
+  }
+
+  .app{
+    width:100%;
+    max-width:980px;
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  header{
+    text-align:center;
+    margin-bottom:18px;
+  }
+
+  h1{
+    margin:6px 0 6px;
+    font-weight:700;
+    font-size:1.6rem;
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  .tabs{
+    display:inline-flex;
+    flex-wrap:wrap;
+    gap:6px;
+    background:var(--glass);
+    padding:8px;
+    border-radius:999px;
+    justify-content:center;
+  }
+
+  .tab{
+  font-family: "Lexend Giga", sans-serif;
+    border:0;
+    background:transparent;
+    color:#ddd;
+    padding:8px 14px;
+    border-radius:999px;
+    cursor:pointer;
+    font-weight:500;
+    transition:background 0.25s, box-shadow 0.3s;
+  }
+
+  .tab.active{
+    background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
+    color:#fff;
+    box-shadow:0 8px 22px rgba(0,0,0,0.45);
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  .main{
+    border-radius:var(--card-radius);
+    padding:18px;
+    box-shadow:0 12px 20px rgba(0,0,0,0.55);
+    backdrop-filter:blur(10px);
+    font-family: "Lexend Giga", sans-serif;
+    background:rgba(255,255,255,0.02);
+  }
+
+  .panel-wrap{
+    position:relative;
+    height:var(--panel-height);
+    overflow:hidden;
+  }
+
+  .panel{
+    position:absolute;
+    inset:0;
+    padding:12px 8px;
+    display:grid;
+    grid-template-columns:1fr 320px;
+    gap:16px;
+    opacity:0;
+    visibility:hidden;
+    transition:opacity .36s ease, visibility .36s;
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  .panel.active{
+    opacity:1;
+    visibility:visible;
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  @media (max-width:880px){
+    .panel{
+      grid-template-columns:1fr;
+      height:auto;
+      position:relative;
+      opacity:1;
+      visibility:visible;
+    }
+    .panel-wrap{
+      height:auto;
+    }
+    .right-pane{
+      order:-1;
+    }
+  }
+
+  .controls{
+    background:rgba(255,255,255,0.02);
+    padding:14px;
+    border-radius:12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  label{
+    font-weight:600;
+    color:#e8e8ff;
+    margin-bottom:6px;
+    display:block;
+  }
+
+  .button-group{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  .button-group button{
+    background:rgba(255,255,255,0.06);
+    border:0;
+    padding:8px 10px;
+    border-radius:8px;
+    color:#fff;
+    cursor:pointer;
+    font-weight:500;
+    transition:background 0.25s, transform 0.2s;
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  .button-group button:hover{
+    transform:scale(1.05);
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  .button-group button.active{
+    background:var(--accent);
+    font-weight:700;
+  }
+
+  input[type="text"], select, textarea{
+    width:100%;
+    background:rgba(255,255,255,0.04);
+    border:0;
+    padding:10px;
+    border-radius:8px;
+    color:#fff;
+    font-weight:600;
+    font-size:1rem;
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  input[type="text"]:focus, select:focus, textarea:focus{
+    outline:none;
+    background:rgba(255,255,255,0.07);
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  .right-pane{
+    background:rgba(0,0,0,0.18);
+    padding:14px;
+    border-radius:12px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    align-items:center;
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  .output-row{
+    display:flex;
+    gap:8px;
+    width:100%;
+    align-items:center;
+    flex-wrap:wrap;
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  .copy-btn{
+    background:var(--muted);
+    border:0;
+    padding:8px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    transition:background 0.25s, transform 0.2s;
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  .copy-btn:hover{
+    background:var(--accent);
+    transform:scale(1.05);
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  .keyboard{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    justify-content:center;
+    width:100%;
+  }
+
+  .key{
+    --glow: rgba(106,90,205,0.55);
+    padding:10px 12px;
+    border-radius:8px;
+    background:#2f2f37;
+    min-width:52px;
+    text-align:center;
+    font-weight:800;
+    color:#fff;
+    transform-origin:center;
+    transition:background-color .45s cubic-bezier(.2,.9,.2,1),
+               box-shadow .55s ease, transform .22s ease, opacity .45s ease;
+    box-shadow:0 2px 6px rgba(0,0,0,0.5);
+    opacity:0.98;
+    font-family: "Lexend Giga", sans-serif;
+  }
+
+  .key.on{
+    background:linear-gradient(135deg,rgba(255,255,255,.9),var(--glow) 50%);
+    box-shadow:0 11px 11px rgba(0,0,0,0.45),
+               0 0 10px var(--glow),
+               0 0 30px color-mix(in srgb,var(--glow) 75%,transparent),
+               0 0 50px color-mix(in srgb,var(--glow) 75%,transparent);
+    transform:translateY(-4px) scale(1.06);
+    opacity:1;
+  }
+
+  .muted{
+    color:#cfcfe6;
+    font-size:0.92rem;
+  }
+  
+  .muted2{
+  	color:#cfcfe6;
+    font-size:0.92rem;
+    padding-bottom:30px;
+   }
+
+  footer{
+    margin-top:12px;
+    color:#cfcfe6;
+    font-size:0.9rem;
+    text-align:center;
+  }
+
+  /* Small-screen adjustments */
+  @media (max-width:600px){
+    body{
+      padding:16px;
+      font-size:15px;
+    }
+
+    .main{
+      padding:14px;
+      border-radius:10px;
+    }
+
+    .tab{
+      padding:7px 10px;
+      font-size:0.95rem;
+    }
+
+    .button-group button,
+    .copy-btn{
+      padding:10px 12px;
+      font-size:0.95rem;
+    }
+
+    .keyboard .key{
+      min-width:46px;
+      padding:8px 10px;
+      font-size:0.95rem;
+    }
+  }
+</style>
+
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="muted">Music Theory Toolkit</div>
+      <h1>Scale · Chord · Transposer</h1>
+      <div style="display:flex;justify-content:center;margin-top:12px">
+        <div class="tabs" role="tablist" aria-label="Tools">
+          <button class="tab active" data-tab="scale">Scale Explorer</button>
+          <button class="tab" data-tab="chord">Chord Explorer</button>
+          <button class="tab" data-tab="transposer">Instrument Transposer</button>
+          <button class="tab" data-tab="detector">Chord Detector</button>
+<button class="tab" data-tab="progressions">Chord Progressions</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="panel-wrap">
+
+        <!-- SCALE -->
+        <section id="scale" class="panel active" aria-hidden="false">
+          <div class="controls">
+            <div>
+              <label>Root Note</label>
+              <div id="scaleNoteGroup" class="button-group">
+                <button>C</button><button>D♭</button><button>D</button><button>E♭</button>
+                <button>E</button><button>F</button><button>G♭</button><button>G</button>
+                <button>A♭</button><button>A</button><button>B♭</button><button>B</button>
+              </div>
+            </div>
+
+            <div>
+              <label>Scale Type</label>
+              <div id="scaleTypeGroup" class="button-group">
+                <button data-intervals="2,2,1,2,2,2,1">Major</button>
+                <button data-intervals="2,1,2,2,1,2,2">Natural Minor</button>
+                <button data-intervals="2,1,2,2,2,1,2">Harmonic Minor</button>
+                <button data-intervals="2,1,2,2,2,1,2">Dorian</button>
+                <button data-intervals="1,2,2,1,2,2,2">Phrygian</button>
+                <button data-intervals="2,2,2,1,2,2,1">Lydian</button>
+                <button data-intervals="2,2,1,2,2,1,2">Mixolydian</button>
+              </div>
+            </div>
+
+            <div>
+              <label>Custom Intervals</label>
+              <input id="customScaleIntervals" placeholder="e.g. 2,2,1,2,2,2,1" type="text" />
+              <div class="muted" style="margin-top:6px">Comma-separated semitone steps</div>
+            </div>
+
+            <div style="margin-top:auto">
+              <label>Scale Output</label>
+              <div class="output-row">
+                <input id="scaleOutput" readonly type="text" />
+                <button id="copyScaleBtn" class="copy-btn">Copy</button>
+              </div>
+            </div>
+          </div>
+
+          <aside class="right-pane">
+            <div style="width:100%">
+              <div class="muted">Notes in scale</div>
+              <input id="scaleNotesCompact" readonly type="text" />
+            </div>
+            <div style="width:100%">
+              <div class="muted2">Keyboard View</div>
+              <div id="scalePiano" class="keyboard"></div>
+            </div>
+          </aside>
+        </section>
+
+        <!-- CHORD -->
+        <section id="chord" class="panel" aria-hidden="true">
+          <div class="controls">
+            <div>
+              <label>Root Note</label>
+              <div id="chordNoteGroup" class="button-group">
+                <button>C</button><button>D♭</button><button>D</button><button>E♭</button>
+                <button>E</button><button>F</button><button>G♭</button><button>G</button>
+                <button>A♭</button><button>A</button><button>B♭</button><button>B</button>
+              </div>
+            </div>
+
+            <div>
+              <label>Chord Type</label>
+              <div id="chordTypeGroup" class="button-group">
+                <button data-symbol="maj" data-intervals="4,3">maj</button>
+                <button data-symbol="m" data-intervals="3,4">m</button>
+                <button data-symbol="maj7" data-intervals="4,3,3">maj7</button>
+                <button data-symbol="m7" data-intervals="3,4,3">m7</button>
+                <button data-symbol="6" data-intervals="4,3,3">6</button>
+                <button data-symbol="7" data-intervals="4,3,4">7</button>
+                <button data-symbol="aug" data-intervals="4,4">aug</button>
+                <button data-symbol="dim" data-intervals="3,3">dim</button>
+                <button data-symbol="sus2" data-intervals="2,5">sus2</button>
+                <button data-symbol="sus4" data-intervals="5,2">sus4</button>
+                <button data-symbol="7sus4" data-intervals="5,2,3">7sus4</button>
+              </div>
+            </div>
+
+            <div>
+              <label>Or type a chord symbol</label>
+              <input id="chordInput" placeholder="e.g. Cmaj7, Abm, G7" type="text" />
+              <div class="muted" style="margin-top:6px">Root can be C, D♭, D, etc.</div>
+            </div>
+
+            <div style="margin-top:auto">
+              <label>Chord Output</label>
+              <div class="output-row">
+                <input id="chordOutput" readonly type="text" />
+                <button id="copyChordBtn" class="copy-btn">Copy</button>
+              </div>
+            </div>
+          </div>
+
+          <aside class="right-pane">
+            <div style="width:100%">
+              <div class="muted">Symbol</div>
+              <input id="chordSymbolOutput" readonly type="text" />
+            </div>
+            <div style="width:100%">
+              <div class="muted2">Keyboard View</div>
+              <div id="chordPiano" class="keyboard"></div>
+            </div>
+          </aside>
+        </section>
+
+        <!-- TRANSPOSER -->
+        <section id="transposer" class="panel" aria-hidden="true">
+          <div class="controls">
+            <div>
+              <label>Input Note</label>
+              <div id="transNoteGroup" class="button-group">
+                <button>C</button><button>D♭</button><button>D</button><button>E♭</button>
+                <button>E</button><button>F</button><button>G♭</button><button>G</button>
+                <button>A♭</button><button>A</button><button>B♭</button><button>B</button>
+              </div>
+            </div>
+
+            <div>
+              <label>From Instrument</label>
+              <div id="fromGroup" class="button-group">
+                <button data-val="C">C</button><button data-val="Bb">B♭</button><button data-val="Eb">E♭</button>
+                <button data-val="F">F</button><button data-val="Db">D♭</button><button data-val="G">G</button><button data-val="A">A</button>
+              </div>
+            </div>
+
+            <div>
+              <label>To Instrument</label>
+              <div id="toGroup" class="button-group">
+                <button data-val="C">C</button><button data-val="Bb">B♭</button><button data-val="Eb">E♭</button>
+                <button data-val="F">F</button><button data-val="Db">D♭</button><button data-val="G">G</button><button data-val="A">A</button>
+              </div>
+            </div>
+
+            <div style="margin-top:auto">
+              <label>Result</label>
+              <div class="output-row">
+                <input id="transposedOutput" readonly type="text" />
+                <button id="copyTransBtn" class="copy-btn">Copy</button>
+              </div>
+              <div style="margin-top:8px">
+                <div class="muted">Semitone Difference</div>
+                <input id="semitoneDiff" readonly type="text" />
+              </div>
+            </div>
+          </div>
+
+          <aside class="right-pane">
+            <div style="width:100%">
+              <div class="muted">Enharmonic</div>
+              <input id="transEnharmonic" readonly type="text" />
+            </div>
+            <div style="width:100%">
+              <div class="muted2">Keyboard View</div>
+              <div id="transPiano" class="keyboard"></div>
+            </div>
+          </aside>
+        </section>
+<!-- CHORD DETECTOR -->
+<section id="detector" class="panel" aria-hidden="true">
+  <div class="controls">
+    <div>
+      <label>Input Notes</label>
+      <input id="detectorInput" placeholder="e.g. C, E, G" type="text" />
+      <div class="muted" style="margin-top:6px">Comma-separated notes (e.g., C, E♭, G)</div>
+    </div>
+
+    <div style="margin-top:auto">
+      <label>Possible Chords</label>
+      <div class="output-row">
+        <textarea id="detectorOutput" readonly rows="4" placeholder="Detected chords will appear here"></textarea>
+        <button id="copyDetectorBtn" class="copy-btn">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <aside class="right-pane">
+    <div style="width:100%">
+      <div class="muted">Input Notes (Normalized)</div>
+      <input id="detectorNotesNormalized" readonly type="text" />
+    </div>
+    <div style="width:100%">
+      <div class="muted2">Keyboard View</div>
+      <div id="detectorPiano" class="keyboard"></div>
+    </div>
+  </aside>
+</section>
+<section id="progressions" class="panel" aria-hidden="true">
+          <div class="controls">
+            <div>
+              <label>Key (Root Note)</label>
+              <div id="progKeyGroup" class="button-group">
+                <button>C</button><button>D♭</button><button>D</button><button>E♭</button>
+                <button>E</button><button>F</button><button>G♭</button><button>G</button>
+                <button>A♭</button><button>A</button><button>B♭</button><button>B</button>
+              </div>
+            </div>
+
+            <div>
+              <label>Progression Type</label>
+              <div id="progTypeGroup" class="button-group">
+                <button data-progression="0,5,7,0">I - IV - V - I</button>
+                <button data-progression="0,5,7,9">I - IV - V - vi</button>
+                <button data-progression="0,3,7">i - iv - v</button>
+                <button data-progression="0,2,7">i - III - v</button>
+              </div>
+            </div>
+
+            <div style="margin-top:auto">
+              <label>Progression Output</label>
+              <div class="output-row">
+                <input id="progOutput" readonly type="text" />
+                <button id="copyProgBtn" class="copy-btn">Copy</button>
+              </div>
+            </div>
+          </div>
+
+          <aside class="right-pane">
+            <div style="width:100%">
+              <div class="muted">Chords in Progression</div>
+              <input id="progChordsCompact" readonly type="text" />
+            </div>
+            <div style="width:100%">
+              <div class="muted2">Keyboard View</div>
+              <div id="progPiano" class="keyboard"></div>
+            </div>
+          </aside>
+        </section>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+(function(){ 'use strict';
+  // Flats-only display array (labels)
+  const NOTES_FLAT = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+  const NOTES_SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+
+  // Global chord map for detection (moved from initChord)
+  const chordMap = { 'maj':[4,3],'m':[3,4],'maj7':[4,3,3],'m7':[3,4,3],'6':[4,3,3],'7':[4,3,4],'aug':[4,4],'dim':[3,3], 'sus2':[2,5], 'sus4':[5,2], '7sus4':[5,2,3] };
+
+  /* Helper: toggle groups */
+    function setupToggleGroup(id, onSelect){
+      const group = document.getElementById(id);
+      if (!group) return;
+      const buttons = Array.from(group.querySelectorAll('button'));
+      buttons.forEach(btn => btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        onSelect(btn);
+      }));
+      if (!buttons.some(b => b.classList.contains('active'))) buttons[0]?.classList.add('active');
+    }
+
+    /* Keyboard renderer:
+       - renders flats-only labels
+       - assigns per-key color via inline style --glow
+       - updates .on class for active notes; transitions handle fade-in/out */
+    function renderKeyboard(containerId, activeNotes = []){
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      // Build active set as indices for robust matching
+      const activeIdx = new Set();
+      activeNotes.forEach(n => {
+        if (!n) return;
+        // normalize input: accept sharps or flats by converting to index
+        const index = noteToIndex(n);
+        if (index !== -1) activeIdx.add(index);
+      });
+
+      // If no keys yet, create them
+const boomwhackerColors = {
+  'C': 'hsla(0, 85%, 60%, 0.85)',        // red
+  'C#': 'hsla(15, 85%, 60%, 0.85)',      // red-orange
+  'D♭': 'hsla(15, 85%, 60%, 0.85)',      // same as C#
+  'D': 'hsla(30, 85%, 60%, 0.85)',       // orange
+  'D#': 'hsla(45, 85%, 60%, 0.85)',      // yellow-orange
+  'E♭': 'hsla(45, 85%, 60%, 0.85)',      // same as D#
+  'E': 'hsla(55, 85%, 60%, 0.85)',       // yellow
+  'F': 'hsla(120, 85%, 40%, 0.85)',      // green
+  'F#': 'hsla(150, 85%, 50%, 0.85)',     // green-cyan
+  'G♭': 'hsla(150, 85%, 50%, 0.85)',     // same as F#
+  'G': 'hsla(180, 85%, 60%, 0.85)',      // turquoise
+  'G#': 'hsla(240, 85%, 55%, 0.85)',     // blue-violet
+  'A♭': 'hsla(240, 85%, 55%, 0.85)',     // same as G#
+  'A': 'hsla(220, 85%, 50%, 0.85)',      // dark blue
+  'A#': 'hsla(270, 85%, 60%, 0.85)',     // violet
+  'B♭': 'hsla(270, 85%, 60%, 0.85)',     // same as A#
+  'B': 'hsla(280, 85%, 60%, 0.85)',      // purple
+  'C_high': 'hsla(0, 85%, 60%, 0.85)'    // red again
+};
+
+
+if (!container.children.length) {
+  NOTES_FLAT.forEach((label, idx) => {
+    const key = document.createElement('div');
+    key.className = 'key';
+    key.dataset.idx = idx;
+    key.textContent = label;
+
+    const glowColor = boomwhackerColors[label] || 'hsla(0,0%,80%,0.85)';
+    key.style.setProperty('--glow', glowColor);
+
+    container.appendChild(key);
+  });
+}
+
+    // Update classes on existing keys for smooth transitions
+    Array.from(container.children).forEach(key => {
+      const idx = parseInt(key.dataset.idx);
+      if (activeIdx.has(idx)) {
+        key.classList.add('on');
+      } else {
+        key.classList.remove('on');
+      }
+    });
+  }
+
+  // Convert note name (sharp or flat or natural) to index 0-11.
+  function noteToIndex(note){
+    if (!note) return -1;
+    const n = String(note).trim();
+    // accept both "C#", "Db", "C", etc.
+    // map via both flats array and sharp equivalents
+    const flats = NOTES_FLAT;
+    const sharps = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+    let idx = flats.indexOf(n);
+    if (idx !== -1) return idx;
+    idx = sharps.indexOf(n);
+    if (idx !== -1) return idx;
+    // try common normalization (e.g., lower-case b)
+    const alt = n.replace('b','♭'); // harmless attempt
+    idx = flats.indexOf(alt);
+    return idx;
+  }
+
+  // Parse comma-separated intervals safely
+  function parseIntervals(str){
+    if (!str) return null;
+    const arr = str.split(',').map(s => Number(s.trim())).filter(n => !Number.isNaN(n));
+    return arr.length ? arr : null;
+  }
+
+  // ---------- SCALE ----------
+  function initScale() {
+    let root = 'C';
+    let intervals = [2,2,1,2,2,2,1];
+
+    setupToggleGroup('scaleNoteGroup', btn => {
+      root = btn.textContent.trim();
+      generate();
+    });
+
+    setupToggleGroup('scaleTypeGroup', btn => {
+      intervals = btn.dataset.intervals.split(',').map(Number);
+      document.getElementById('customScaleIntervals').value = ''; // clear custom when switching preset
+      generate();
+    });
+
+    // listen to manual interval input
+    const customInput = document.getElementById('customScaleIntervals');
+    customInput.addEventListener('input', () => {
+      const parsed = parseIntervals(customInput.value);
+      if (parsed && parsed.length) {
+        intervals = parsed;
+        // visually deselect scale type buttons
+        document.querySelectorAll('#scaleTypeGroup button')
+          .forEach(b => b.classList.remove('active'));
+        generate();
+      }
+    });
+
+    document.getElementById('copyScaleBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(document.getElementById('scaleOutput').value || '');
+      flash(document.getElementById('copyScaleBtn'));
+    });
+
+    function generate() {
+      const rootIdx = noteToIndex(root);
+      if (rootIdx < 0) return;
+      const scale = [NOTES_FLAT[rootIdx]];
+      let idx = rootIdx;
+      intervals.forEach(i => {
+        idx = (idx + i) % 12;
+        scale.push(NOTES_FLAT[idx]);
+      });
+      document.getElementById('scaleOutput').value = scale.join(' - ');
+      document.getElementById('scaleNotesCompact').value = scale.join(', ');
+      renderKeyboard('scalePiano', scale);
+    }
+
+    // initialize defaults
+    document.querySelectorAll('#scaleNoteGroup button')[0].classList.add('active');
+    document.querySelectorAll('#scaleTypeGroup button')[0].classList.add('active');
+    generate();
+  }
+
+  // ---------- CHORD ----------
+  function initChord(){
+    let root = 'C', intervals = chordMap['maj'], sym = 'maj';  // Use global chordMap
+
+    setupToggleGroup('chordNoteGroup', btn => { root = btn.textContent.trim(); generate(); });
+    setupToggleGroup('chordTypeGroup', btn => { intervals = btn.dataset.intervals.split(',').map(Number); sym = btn.dataset.symbol; document.getElementById('chordInput').value=''; generate(); });
+
+    document.getElementById('chordInput').addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      if (!val) return;
+      parseSymbol(val);
+    });
+
+    document.getElementById('copyChordBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(document.getElementById('chordOutput').value || '');
+      flash(document.getElementById('copyChordBtn'));
+    });
+
+    function normalizeNoteInput(s){
+      if (!s) return s;
+      const up = s[0].toUpperCase() + (s[1] ? s.slice(1) : '');
+      const idxFlat = NOTES_FLAT.indexOf(up);
+      if (idxFlat !== -1) return NOTES_FLAT[idxFlat];
+      // support sharps input by mapping to same index but returning flat label
+      const sharps = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+      const idxSharp = sharps.indexOf(up);
+      if (idxSharp !== -1) return NOTES_FLAT[idxSharp];
+      return up;
+    }
+
+    function parseSymbol(sym){
+      const m = sym.match(/^([A-G](?:#|b)?)(.*)$/i);
+      if (!m) return;
+      const rootInput = normalizeNoteInput(m[1]);
+      let t = m[2] || 'maj';
+      if (t === 'M') t = 'maj';
+      if (t === 'min') t = 'm';
+      if (!chordMap[t]) t = 'maj';
+      const idx = noteToIndex(rootInput);
+      if (idx === -1) return;
+      root = NOTES_FLAT[idx]; intervals = chordMap[t]; sym = t;
+      // update button states
+      document.querySelectorAll('#chordNoteGroup button').forEach(b => b.classList.toggle('active', b.textContent === root));
+      document.querySelectorAll('#chordTypeGroup button').forEach(b => b.classList.toggle('active', b.dataset.symbol === sym));
+      generate();
+    }
+
+    function generate(){
+      const idxRoot = noteToIndex(root);
+      if (idxRoot < 0) return;
+      const chord = [NOTES_FLAT[idxRoot]];
+      let idx = idxRoot;
+      intervals.forEach(i => { idx = (idx + i) % 12; chord.push(NOTES_FLAT[idx]); });
+      document.getElementById('chordOutput').value = chord.join(' - ');
+      document.getElementById('chordSymbolOutput').value = chord[0] + sym;
+      renderKeyboard('chordPiano', chord);
+    }
+
+    window.generateChord = generate;
+    // defaults
+    document.querySelectorAll('#chordNoteGroup button')[0].classList.add('active');
+    document.querySelectorAll('#chordTypeGroup button')[0].classList.add('active');
+    generate();
+  }
+
+  // Updated function to list all possible chords containing the input notes, narrowing as more notes are added
+  function detectChords(inputNotes) {
+    const notes = inputNotes.map(n => noteToIndex(n)).filter(idx => idx !== -1);
+    if (notes.length === 0) return ['No notes entered'];
+
+    const uniqueNotes = [...new Set(notes)]; // Remove duplicates
+    const results = [];
+
+    // For each possible root (0-11), check if the input notes are a subset of the chord
+    for (let root = 0; root < 12; root++) {
+      for (const [type, intervals] of Object.entries(chordMap)) {
+        const chordNotes = [0]; // Root at 0
+        let current = 0;
+        intervals.forEach(int => {
+          current = (current + int) % 12;
+          chordNotes.push(current);
+        });
+        chordNotes.sort((a, b) => a - b);
+
+        // Shift chord notes to the actual root
+        const actualChordNotes = chordNotes.map(note => (note + root) % 12);
+
+        // Check if all unique input notes are in the chord notes (subset check)
+        const isSubset = uniqueNotes.every(note => actualChordNotes.includes(note));
+        if (isSubset) {
+          results.push(`${NOTES_FLAT[root]}${type}`);
+        }
+      }
+    }
+
+    return results.length ? [...new Set(results)] : ['No chords detected'];
+  }
+
+  // ---------- TRANSPOSER ----------
+  function initTransposer(){
+    const map = { 'C':0,'Bb':2,'Eb':-3,'F':7,'Db':1,'G':-5,'A':-9 };
+    let note='C', from='C', to='C';
+
+    setupToggleGroup('transNoteGroup', btn => { note = btn.textContent.trim(); transpose(); });
+    setupToggleGroup('fromGroup', btn => { from = btn.dataset.val; transpose(); });
+    setupToggleGroup('toGroup', btn => { to = btn.dataset.val; transpose(); });
+
+    document.getElementById('copyTransBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(document.getElementById('transposedOutput').value || '');
+      flash(document.getElementById('copyTransBtn'));
+    });
+
+
+    function enh(i){
+  return NOTES_SHARP[i % 12]; // wrap around safely
+}
+
+    function transpose(){
+      const idx = noteToIndex(note);
+      if (idx < 0) return;
+      const d = (map[to]||0) - (map[from]||0);
+      const tIdx = (idx + d + 12) % 12;
+      document.getElementById('transposedOutput').value = [NOTES_FLAT[tIdx]];
+      document.getElementById('semitoneDiff').value = (d >= 0 ? '+'+d : String(d));
+      document.getElementById('transEnharmonic').value = NOTES_FLAT[tIdx] + ' / ' + enh(tIdx);
+      renderKeyboard('transPiano', [NOTES_FLAT[tIdx]]);
+    }
+
+    window.transpose = transpose;
+    // defaults
+    document.querySelectorAll('#transNoteGroup button')[0].classList.add('active');
+    document.querySelectorAll('#fromGroup button')[0].classList.add('active');
+    document.querySelectorAll('#toGroup button')[0].classList.add('active');
+    transpose();
+  }
+// ---------- CHORD PROGRESSIONS (NEW) ----------
+  function initProgressions() {
+    let key = 'C';
+    let progression = [0,5,7,0]; // Default: I-IV-V-I
+
+    setupToggleGroup('progKeyGroup', btn => {
+      key = btn.textContent.trim();
+      generateProgression();
+    });
+
+    setupToggleGroup('progTypeGroup', btn => {
+      progression = btn.dataset.progression.split(',').map(Number);
+      generateProgression();
+    });
+
+    document.getElementById('copyProgBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(document.getElementById('progOutput').value || '');
+      flash(document.getElementById('copyProgBtn'));
+    });
+
+    function generateProgression() {
+      const keyIdx = noteToIndex(key);
+      if (keyIdx < 0) return;
+      const chords = progression.map(step => NOTES_FLAT[(keyIdx + step) % 12]);
+      const chordSymbols = progression.map(step => {
+        const note = NOTES_FLAT[(keyIdx + step) % 12];
+        return note + 'maj'; // Assuming major for simplicity; can expand for minors
+      });
+      document.getElementById('progOutput').value = chordSymbols.join(' - ');
+      document.getElementById('progChordsCompact').value = chords.join(', ');
+      // Collect all unique notes from the chords for keyboard view
+      const allNotes = [];
+      progression.forEach(step => {
+        const rootIdx = (keyIdx + step) % 12;
+        // Add root, major third, perfect fifth for each chord
+        allNotes.push(NOTES_FLAT[rootIdx], NOTES_FLAT[(rootIdx + 4) % 12], NOTES_FLAT[(rootIdx + 7) % 12]);
+      });
+      renderKeyboard('progPiano', [...new Set(allNotes)]);
+    }
+
+    // Initialize defaults
+    document.querySelectorAll('#progKeyGroup button')[0].classList.add('active');
+    document.querySelectorAll('#progTypeGroup button')[0].classList.add('active');
+    generateProgression();
+  }
+
+  // ---------- Tabs: unified fade ----------
+  function initTabs(){
+    const tabButtons = Array.from(document.querySelectorAll('.tab'));
+    const panels = { scale: document.getElementById('scale'), chord: document.getElementById('chord'), transposer: document.getElementById('transposer'), detector: document.getElementById('detector'), progressions: document.getElementById('progressions') };
+    tabButtons.forEach(tb => tb.addEventListener('click', () => {
+      if (tb.classList.contains('active')) return;
+      document.querySelector('.tab.active').classList.remove('active');
+      tb.classList.add('active');
+      Object.values(panels).forEach(p => { p.classList.remove('active'); p.setAttribute('aria-hidden','true'); });
+      const key = tb.dataset.tab;
+      panels[key].classList.add('active'); panels[key].setAttribute('aria-hidden','false');
+      // refresh visuals
+      if (key === 'scale' && window.generateScale) window.generateScale();
+      if (key === 'chord' && window.generateChord) window.generateChord();
+      if (key === 'transposer' && window.transpose) window.transpose();
+      if (key === 'detector') {
+        // Trigger input event to refresh if needed
+        document.getElementById('detectorInput').dispatchEvent(new Event('input'));
+      }
+if (key === 'progressions' && window.generateProgression) window.generateProgression(); // NEW
+    }));
+  }
+
+  // ---------- helpers ----------
+  function flash(el){
+    if (!el) return;
+    const txt = el.textContent;
+    el.textContent = 'Copied';
+    setTimeout(()=> el.textContent = txt, 900);
+  }
+
+  function initDetector() {
+    const input = document.getElementById('detectorInput');
+    const output = document.getElementById('detectorOutput');
+    const normalized = document.getElementById('detectorNotesNormalized');
+    const copyBtn = document.getElementById('copyDetectorBtn');
+
+    input.addEventListener('input', () => {
+      const rawNotes = input.value.split(',').map(n => n.trim()).filter(n => n);
+      const normalizedNotes = rawNotes.map(n => {
+        const idx = noteToIndex(n);
+        return idx !== -1 ? NOTES_FLAT[idx] : null;
+      }).filter(n => n);
+      normalized.value = normalizedNotes.join(', ');
+
+      const chords = detectChords(rawNotes);
+      output.value = chords.join('\n');  // Always output something
+
+      renderKeyboard('detectorPiano', normalizedNotes);
+    });
+
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(output.value || '');
+      flash(copyBtn);
+    });
+  }
+
+  // Boot
+  document.addEventListener('DOMContentLoaded', () => {
+    try{
+      initScale(); initChord(); initTransposer(); initTabs(); initDetector(); initProgressions();
+      // initial render of all keyboards so they share identical DOM heights
+      window.generateScale && window.generateScale();
+      window.generateChord && window.generateChord();
+      window.transpose && window.transpose();
+    }catch(e){ console.error('Init failed', e); }
+  });
+})();
+</script>
+</body>
+</html>
